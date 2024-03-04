@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -53,7 +54,7 @@ public class SecurityConfig {
 
         http.exceptionHandling(httpSecurityExceptionHandlingConfigurer ->
                 httpSecurityExceptionHandlingConfigurer.defaultAuthenticationEntryPointFor(
-                        new LoginUrlAuthenticationEntryPoint("/login"),
+                        new LoginUrlAuthenticationEntryPoint("/auth/signIn"),
                         new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
                 )
         );
@@ -70,8 +71,21 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize.anyRequest().authenticated())
-                .formLogin(Customizer.withDefaults())
+                .formLogin(
+                        configurer -> configurer
+                                .loginProcessingUrl("/auth/signIn").permitAll()
+                                .loginPage("/auth/signIn").permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/auth/signIn?logout=success")
+                        .deleteCookies("JSESSIONID")
+                        .invalidateHttpSession(true)
+                        .permitAll()
+                )
                 .build();
     }
 
@@ -95,9 +109,9 @@ public class SecurityConfig {
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                .clientSettings(ClientSettings.builder()
-                        .requireProofKey(true)
-                        .build())
+//                .clientSettings(ClientSettings.builder()
+//                        .requireProofKey(true)
+//                        .build())
                 .build();
         return new InMemoryRegisteredClientRepository(oidcClient);
     }

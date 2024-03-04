@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - WSD</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .motive-section {
+            background-color: #007BFF; /* Adjust this color */
+            color: #fff;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .login-section {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .login-container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .form-control {
+            margin-bottom: 20px;
+        }
+        .form-control label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        .form-control input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-control input[type="submit"] {
+            background-color: #0056b3; /* Adjust this color */
+            color: #ffffff;
+            cursor: pointer;
+            border: none;
+        }
+        .form-control input[type="submit"]:hover {
+            background-color: #004099; /* Darker shade for hover state */
+        }
+        @media (max-width: 800px) {
+            .container {
+                flex-direction: column;
+                justify-content: center;
+            }
+            .motive-section {
+                display: none; /* Hide the motive section on mobile */
+            }
+            .login-section {
+                width: 100%;
+                /* Adjust the height if necessary, or remove this property to let the content define the height */
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="motive-section">
+        <h1>Welcome to WSD</h1>
+        <p>Empowering your digital journey.</p>
+    </div>
+    <div class="login-section">
+        <div class="login-container">
+            <h2>Login to Your Account</h2>
+            <form th:action="@{/auth/signIn}" method="post">
+                <div class="form-control">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-control">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-control">
+                    <input type="submit" value="Login">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
