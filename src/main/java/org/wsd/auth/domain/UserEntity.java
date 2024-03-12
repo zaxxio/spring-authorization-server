@@ -28,10 +28,10 @@ import java.util.UUID;
         })
 @Builder(builderMethodName = "Builder")
 @AllArgsConstructor
-@EntityListeners(AuditEntityListener.class)
+//@EntityListeners(AuditEntityListener.class)
 @JsonPropertyOrder(alphabetic = true)
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//@Cacheable
+//@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class UserEntity extends AbstractAuditableEntity implements UserDetails {
 
     @Id

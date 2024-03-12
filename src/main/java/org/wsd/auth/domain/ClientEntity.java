@@ -12,7 +12,7 @@ import java.time.Instant;
 
 @Data
 @Entity
-@Table(name = "client")
+@Table(name = "clients")
 @AllArgsConstructor
 @NoArgsConstructor
 public class ClientEntity {

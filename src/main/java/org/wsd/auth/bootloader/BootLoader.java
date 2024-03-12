@@ -12,6 +12,8 @@ import org.springframework.security.oauth2.server.authorization.settings.ClientS
 import org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.transaction.annotation.Transactional;
 import org.wsd.auth.domain.RoleEntity;
 import org.wsd.auth.domain.UserEntity;
 import org.wsd.auth.repository.UserRepository;
@@ -25,12 +27,14 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@EnableTransactionManagement
 public class BootLoader implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JpaRegisteredClientRepositoryService jpaRegisteredClientRepositoryService;
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         final UserEntity user = new UserEntity();
         user.setUserId(UUID.randomUUID());
@@ -47,13 +51,17 @@ public class BootLoader implements CommandLineRunner {
                 .clientSecret(passwordEncoder.encode("secret"))
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
+                .scope("read")
                 .clientIdIssuedAt(Instant.now())
                 .clientSecretExpiresAt(Instant.now().plus(365, ChronoUnit.DAYS))
                 .redirectUri("https://oidcdebugger.com/debug")
+                .redirectUri("http://localhost:8080/swagger-ui/oauth2-redirect.html")
                 .redirectUri("https://oauthdebugger.com/debug")
                 .redirectUri("https://springone.io/authorized")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 .clientSettings(clientSettings())
                 .tokenSettings(tokenSettings())
@@ -62,16 +70,18 @@ public class BootLoader implements CommandLineRunner {
         this.jpaRegisteredClientRepositoryService.save(oidcClient);
     }
 
+
     public ClientSettings clientSettings() {
         return ClientSettings.builder()
                 .requireProofKey(true)
+                .requireAuthorizationConsent(true)
                 .build();
     }
 
+
     public TokenSettings tokenSettings() {
         return TokenSettings.builder()
-                .accessTokenFormat(OAuth2TokenFormat.SELF_CONTAINED)
-                .accessTokenTimeToLive(Duration.ofDays(7))
+                .accessTokenTimeToLive(Duration.ofMinutes(60))
                 .build();
     }
 }

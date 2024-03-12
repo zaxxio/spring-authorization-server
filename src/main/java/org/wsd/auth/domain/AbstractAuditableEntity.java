@@ -24,11 +24,11 @@ import static jakarta.persistence.TemporalType.TIMESTAMP;
 @Getter
 @Setter
 @ToString
-@MappedSuperclass
+//@MappedSuperclass
 @RequiredArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//@EntityListeners(AuditingEntityListener.class)
+//@Cacheable
+//@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public abstract class AbstractAuditableEntity implements Serializable {
 
     @CreatedBy

@@ -15,9 +15,9 @@ import java.util.UUID;
 @Table(name = "roles")
 @RequiredArgsConstructor
 @AllArgsConstructor
-@EntityListeners(AuditEntityListener.class)
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+// @EntityListeners(AuditEntityListener.class)
+// @Cacheable
+// @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class RoleEntity extends AbstractAuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
