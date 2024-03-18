@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.InMemoryOAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.InMemoryOAuth2AuthorizationService;
@@ -33,17 +34,21 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationContext;
+import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.wsd.auth.repository.UserRepository;
+import org.wsd.auth.service.OidcUserInfoService;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -53,6 +58,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -61,6 +67,7 @@ import java.util.stream.Collectors;
 public class SecurityConfig {
 
     private final UserRepository userRepository;
+    private final OidcUserInfoService oidcUserInfoService;
 
     @Bean
     @Order(1)
@@ -71,7 +78,12 @@ public class SecurityConfig {
         http.cors(Customizer.withDefaults());
 
 
-        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults());
+        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults())
+                .oidc((oidc) -> oidc
+                .userInfoEndpoint((userInfo) -> userInfo
+                        .userInfoMapper(userInfoMapper())
+                )
+        );
 
         http.exceptionHandling(httpSecurityExceptionHandlingConfigurer ->
                 httpSecurityExceptionHandlingConfigurer.defaultAuthenticationEntryPointFor(
@@ -85,6 +97,14 @@ public class SecurityConfig {
                         .jwt(Customizer.withDefaults())
         );
         return http.build();
+    }
+
+    private Function<OidcUserInfoAuthenticationContext, OidcUserInfo> userInfoMapper() {
+        return context -> {
+            OidcUserInfoAuthenticationToken authentication = context.getAuthentication();
+            JwtAuthenticationToken principal = (JwtAuthenticationToken) authentication.getPrincipal();
+            return new OidcUserInfo(principal.getToken().getClaims());
+        };
     }
 
     @Bean
@@ -106,6 +126,20 @@ public class SecurityConfig {
                         .invalidateHttpSession(true)
                         .permitAll()
                 )
+                .build();
+    }
+
+    @Bean
+    AuthorizationServerSettings authorizationServerSettings() {
+        return AuthorizationServerSettings.builder()
+                .issuer("http://localhost:9000")
+                .authorizationEndpoint("/oauth2/authorize")
+                .tokenEndpoint("/oauth2/token")
+                .tokenIntrospectionEndpoint("/oauth2/introspect")
+                .tokenRevocationEndpoint("/oauth2/revoke")
+                .jwkSetEndpoint("/oauth2/jwks")
+                .oidcUserInfoEndpoint("/userinfo")
+                //.oidcClientRegistrationEndpoint("/clientregistration")
                 .build();
     }
 
@@ -152,6 +186,10 @@ public class SecurityConfig {
             final Authentication principal = context.getPrincipal();
             if (context.getTokenType().getValue().equals("id_token")) {
                 context.getClaims().claim("token_type", "id_token");
+                OidcUserInfo userInfo = oidcUserInfoService.loadUser(
+                        context.getPrincipal().getName());
+                context.getClaims().claims(claims ->
+                        claims.putAll(userInfo.getClaims()));
             }
             if (context.getTokenType().getValue().equals("access_token")) {
                 context.getClaims().claim("token_type", "access_token");
@@ -200,10 +238,5 @@ public class SecurityConfig {
         return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
 
-    @Bean
-    public AuthorizationServerSettings authorizationServerSettings() {
-        return AuthorizationServerSettings.builder()
-                .build();
-    }
 
 }

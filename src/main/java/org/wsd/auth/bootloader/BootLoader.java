@@ -70,7 +70,7 @@ public class BootLoader implements CommandLineRunner {
         this.jpaRegisteredClientRepositoryService.save(oidcClient);
     }
 
-
+    @Bean
     public ClientSettings clientSettings() {
         return ClientSettings.builder()
                 .requireProofKey(true)
@@ -79,6 +79,7 @@ public class BootLoader implements CommandLineRunner {
     }
 
 
+    @Bean
     public TokenSettings tokenSettings() {
         return TokenSettings.builder()
                 .accessTokenTimeToLive(Duration.ofMinutes(60))
