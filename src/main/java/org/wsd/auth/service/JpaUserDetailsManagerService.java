@@ -3,6 +3,7 @@ package org.wsd.auth.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 import org.wsd.auth.domain.UserEntity;
@@ -15,6 +16,7 @@ import java.util.Optional;
 public class JpaUserDetailsManagerService implements UserDetailsManager {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void createUser(UserDetails user) {

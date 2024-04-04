@@ -78,7 +78,7 @@ public class SecurityConfig {
         http.cors(Customizer.withDefaults());
 
 
-        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults())
+        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
                 .oidc((oidc) -> oidc
                 .userInfoEndpoint((userInfo) -> userInfo
                         .userInfoMapper(userInfoMapper())
